@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.16)
+project(navigation_coordinates VERSION 1.0 LANGUAGES CXX)
+
+add_library(navigation_coordinates src/coordinates.cpp)
+target_include_directories(navigation_coordinates PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_compile_features(navigation_coordinates PUBLIC cxx_std_17)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(navigation_coordinates PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_executable(coordinate_demo src/main.cpp)
+target_link_libraries(coordinate_demo PRIVATE navigation_coordinates)
+
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(coordinate_tests tests/coordinate_tests.cpp)
+  target_link_libraries(coordinate_tests PRIVATE navigation_coordinates)
+  add_test(NAME coordinate_tests COMMAND coordinate_tests)
+  add_test(NAME cli_blh2xyz COMMAND coordinate_demo blh2xyz 0 0 0)
+  set_tests_properties(cli_blh2xyz PROPERTIES PASS_REGULAR_EXPRESSION "6378137.000000000")
+  add_test(NAME cli_invalid_input COMMAND coordinate_demo blh2xyz 91 0 0)
+  set_tests_properties(cli_invalid_input PROPERTIES WILL_FAIL TRUE)
+endif()
